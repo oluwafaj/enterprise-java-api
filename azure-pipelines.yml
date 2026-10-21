@@ -8,7 +8,7 @@ variables:
   azureSubscription: 'ACR-Service-Connection'
   
   # Registry and Image configuration
-  dockerRegistryServiceConnection: 'acrservice-connect'
+  dockerRegistryServiceConnection: 'acrservice-connect1'
   containerRegistry: 'enterprisejava.azurecr.io'
   imageRepository: 'enterprise-java-api'
   
