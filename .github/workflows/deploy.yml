@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_CONTAINER_REGISTRY: 'devclass3.azurecr.io'
+  AZURE_CONTAINER_REGISTRY: 'enterprisejava.azurecr.io'
   IMAGE_NAME: 'enterprise-java-api'
   APP_NAME: 'enterprise-java'
 
