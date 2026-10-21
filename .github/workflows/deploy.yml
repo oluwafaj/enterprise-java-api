@@ -1,4 +1,4 @@
-name: Build and Push Enterprise Java App to ACR
+name: Build, Push, and Deploy Enterprise Java App
 
 on:
   push:
@@ -7,11 +7,16 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_CONTAINER_REGISTRY: 'enterprisejava.azurecr.io'
+  AZURE_CONTAINER_REGISTRY: 'devclass3.azurecr.io'
   IMAGE_NAME: 'enterprise-java-api'
+  APP_NAME: 'enterprise-java' # Base App Service Name
 
 jobs:
+  # -------------------------------------------------------------------
+  # Job 1: Build Java App and Push Docker Image to ACR
+  # -------------------------------------------------------------------
   build-and-push:
+    name: Build & Push to ACR
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +49,68 @@ jobs:
           
           docker push $IMAGE_URI:latest
           docker push $IMAGE_URI:$COMMIT_SHA
+
+  # -------------------------------------------------------------------
+  # Job 2: Deploy Container to Dev Slot (enterprise-java/dev)
+  # -------------------------------------------------------------------
+  deploy-dev:
+    name: Deploy to Dev Slot
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Log in to Azure (Service Principal or Publish Profile)
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Container to Dev Slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: 'dev'
+          images: '${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+
+  # -------------------------------------------------------------------
+  # Job 3: Deploy Container to Staging Slot (enterprise-java/staging)
+  # -------------------------------------------------------------------
+  deploy-staging:
+    name: Deploy to Staging Slot
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Container to Staging Slot
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: 'staging'
+          images: '${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+
+  # -------------------------------------------------------------------
+  # Job 4: Deploy Container to Production (enterprise-java)
+  # -------------------------------------------------------------------
+  deploy-production:
+    name: Deploy to Production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Container to Production App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.APP_NAME }}
+          images: '${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
