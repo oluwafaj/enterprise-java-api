@@ -28,6 +28,14 @@ stages:
         pool:
           vmImage: $(vmImageName)
         steps:
+          # --- ADD THIS TASK TO SET JAVA 21 ---
+          - task: JavaToolInstaller@0
+            displayName: 'Use Java 21'
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
           - task: Maven@4
             displayName: 'Build with Maven'
             inputs:
