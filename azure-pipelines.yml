@@ -52,10 +52,10 @@ stages:
           - task: Docker@2
             displayName: 'Build and Push Image to ACR'
             inputs:
-              command: buildAndPush
-              repository: $(imageRepository)
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              containerRegistry: $(dockerRegistryServiceConnection)
+              containerRegistry: '$(dockerRegistryServiceConnection)'
+              repository: '$(imageRepository)'
+              command: 'buildAndPush'
+              Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
               tags: |
                 latest
                 $(Build.BuildId)
